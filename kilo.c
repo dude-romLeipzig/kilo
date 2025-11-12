@@ -1,4 +1,4 @@
-/*** wir stehen bei step 39 ***/
+/*** wir stehen bei step 48 ***/
 
 
 
@@ -18,6 +18,13 @@
 #define KILO_VERSION "0.0.1"
 
 #define CTRL_KEY(k) ((k) & 0x1f)
+
+enum editorKey {
+	ARROW_LEFT = 'a',
+	ARROW_RIGHT = 'd',
+	ARROW_UP = 'w',
+	ARROW_DOWN = 's',
+};
 
 /*** data ***/
 
@@ -65,7 +72,25 @@ char editorReadKey() {
 	while ((nread = read(STDIN_FILENO, &c, 1)) != 1) {
 		if (nread == -1 && errno != EAGAIN) die("read");
 	}
+	
+	if (c == '\x1b') {
+		char seq[3];
+		
+		if (read(STDIN_FILENO, &seq[0], 1) != 1) return '\x1b';
+		if (read(STDIN_FILENO, &seq[1], 1) != 1) return '\x1b';
+		
+		if (seq[0] == '[') {
+			switch (seq[1]) {
+				case 'A': return ARROW_UP;
+				case 'B': return ARROW_DOWN;
+				case 'C': return ARROW_RIGHT;
+				case 'D': return ARROW_LEFT;
+			}
+		}
+		return '\x1b';
+	}else{
 	return c;
+	}
 }
 
 int getWindowSize(int *rows, int *cols){
@@ -110,7 +135,7 @@ void editorDrawRows(struct abuf *ab) {
 		if (y == E.screenrows / 3) {
 			char welcome[80];
 			int welcomelen = snprintf(welcome, sizeof(welcome),
-				"Kilo editor -- version %s by ghostKid", KILO_VERSION);
+				"Kilo editor -- version %s", KILO_VERSION);
 			
 			if (welcomelen > E.screencols) welcomelen = E.screencols;
 			int padding = (E.screencols - welcomelen) / 2;
@@ -158,6 +183,7 @@ void editorRefreshScreen() {
 	snprintf(buf, sizeof(buf), "\x1b[%d;%dH", E.cy + 1, E.cx + 1);
 	abAppend(&ab, buf, strlen(buf));
 	
+	abAppend(&ab, "x1b[H", 3);
 	abAppend(&ab, "\x1b[?25h", 6);
 	
 	write(STDOUT_FILENO, ab.b, ab.len);
@@ -169,16 +195,16 @@ void editorRefreshScreen() {
 
 void editorMoveCursor( char key) {
 	switch (key) {
-		case 'a':
+		case ARROW_LEFT:
 			E.cx--;
 			break;
-		case 'd':
+		case ARROW_RIGHT:
 			E.cx++;
 			break;
-		case 'w':
+		case ARROW_UP:
 			E.cy--;
 			break;
-		case 's':
+		case ARROW_DOWN:
 			E.cy++;
 			break;
 	}
@@ -192,10 +218,10 @@ void editorProcessKeypress() {
 			write(STDOUT_FILENO, "\x1b[H", 3);
 			exit(0);
 			break;
-		case 'w':
-		case 's':
-		case 'a':
-		case 'd':
+		case ARROW_UP:
+		case ARROW_DOWN:
+		case ARROW_LEFT:
+		case ARROW_RIGHT:
 			editorMoveCursor(c);
 			break;
 	}
