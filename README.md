@@ -47,8 +47,8 @@ gcc -o kilo kilo.c -Wall -Wextra
 
 ## About
 Started this to keep me busy during the boring parts of retraining.
-Now these parts become sparse, or, atleast they demand my attention more than they used to. 
-So now the commits become sparse as well. 
+Now these parts have become sparse, or, atleast they demand my attention more than they used to. 
+So now the commits have become sparse as well. 
 
 This project is a learning exercise — building a text editor step by step to understand
 how terminals, raw input, and screen rendering actually work under the hood.
